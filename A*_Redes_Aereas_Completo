@@ -1,0 +1,287 @@
+%Caso que considera que el origen está mal escrito.
+
+encontrarCamino(Origen,Destino):-
+     not(indice_ciudad(_,Origen)),
+     indice_ciudad(_,Destino),
+     write("El nombre del Origen está mal escrito").
+
+%Caso que considera que el destino está mal escrito.
+
+encontrarCamino(Origen,Destino):-
+     indice_ciudad(_,Origen),
+     not(indice_ciudad(_,Destino)),
+     write("El nombre del Destino está mal escrito").
+
+%Caso que considera que el destino y el origen están mal escritos.
+
+encontrarCamino(Origen,Destino):-
+     not(indice_ciudad(_,Origen)),
+     not(indice_ciudad(_,Destino)),
+     write("El nombre del Origen y del destino están mal escritos").
+
+% Método que considera el caso donde la ciudad origen es también el
+% destino.
+
+encontrarCamino(Origen,Origen):-
+     write("el destino es igual al origen").
+
+% Método que se ejecuta desde la consola para buscar el camino más corto
+% para llegar desde la ciudad Origen a la ciudad Destino.
+
+encontrarCamino(Origen,Destino):-                                 %El método recibe el nombre de la ciudad origen y el nombre de la ciudad Destino.
+     indice_ciudad(C1,Origen),                                    %Se obtiene el indice asociado a la ciudad origen.
+     indice_ciudad(C2,Destino),                                   %Se obtiene el indice asociado a la ciudad destino.
+     busqueda(C1,(C1,0),C2,[],[],[],0).                           %Al inicio, el costo acumulado es 0, las listas de Frontera, visitados
+                                                                  %y frontera se encuentran vacias y la bandera sirve para indicar si la
+                                                                  % busqueda ha terminado.
+
+% Método principal que permite buscar la ruta más corta entre dos
+% ciudades.
+
+busqueda(Origen,(C1,Costo),C2,Frontera,Visitados,Resultado,0):-   %busqueda(Origen,(Origen,CostoAcumulado),Destino,Frontera,Visitados,Resultado,Bandera).
+    agregarIndice(C1, Visitados, VisitadosN),                     %Se agrega el nodo actual a la lista de visitados.
+    sucesores((C1,Costo),Sus),                                    %Encuentra los sucesores del nodo actual.
+    agregarFrontera(VisitadosN,Sus,Frontera,[(A,B)|FronteraN]),   %Agrega los sucesores del nodo actual a la frontera.
+    esDestino(A,C2,Res),                                          %Verifica si el nodo actual es el destino.
+    agregarIndice(C1,Resultado,Nres),                             %Se agrega el nodo actual a la lista de Resultado.
+    busqueda(Origen,(A,B),C2,FronteraN,VisitadosN,Nres,Res).      %Llamada recursiva del método hasta que encuentre una solución o no hay más frontera.
+
+% Caso donde la busqueda encuentra una solución. Imprime la ruta más
+% corta y la distancia total en Kilometros.
+
+busqueda(Origen,(_,B),C2,_,_,Resultado,1):-                       %busqueda(Origen,(_,CostoAcumulado),Destino,_,_,Resultado,Bandera).
+     actualizaCamino(Origen,C2,Resultado,B,CaminoCorrecto),       %Método para filtrar el resultado correcto de la lista de resultados.
+     write("La mejor ruta es la siguiente: "),nl,
+     indice_ciudad(Origen,X),
+     write(X),write("  "),
+     imprimeRes(CaminoCorrecto),nl,
+     write("La distancia en kilometros es: "),
+     write(B).
+
+% Caso donde la busqueda no encuentra una solución. Imprime el siguiente
+% mensaje: "No hay respuesta".
+
+busqueda(_,[],_,[],[],[],0):-
+    write("No hay respuesta").
+
+% Método que permite agregar un indice a una lista. Regresa una
+% lista actualizada que contiene el indice.
+
+agregarIndice(C1,Lista, ListaNueva):-                            %agregarIndice(Indice,Lista,ListaActualizada)
+    ListaNueva = [C1|Lista].
+
+% Método para corroborar si el indice actual es igual al indice del
+% destino.
+
+esDestino(C1,C1,1).                                              %Si el indice actual es igual al indice del destino manda 1.
+esDestino(_,_,0).                                                %Si el indice actual no es igual al indice del destino, manda un 0.
+
+% Método para encontrar los sucesores del nodo actual.
+
+% Este caso permite encontrar, en el árbol, las relaciones que
+% tiene el nodo actual
+
+sucesor(X,Y,Z):-                                                 %sucesor(IndiceActual, Indicesucesor, Distancia).
+    grafo(X,Y,Z).
+
+sucesores((X,Costo), Sucs):-                                     %sucesores((IndiceActual, CostoAcumulado),ListaDeSucesores).
+    sucesores((X,Costo),Sucs,[]).
+
+sucesores((X,Costo),[(S1,Z)|Sucs],Aux):-             %sucesores((IndiceActual,CostoAnterio),[(IndiceSucesor,CostoAcumulado)|RestoDeSucesores],Auxiliar).
+    sucesor(X,S1,Z1),                                %Encuentra indice de nodo sucesor y la distancia entre ellos.
+    Z is Z1+Costo,                                   %Suma la distancia entre indices con el costo anterior para obtener el nuevo costo acumulado.
+    \+member((S1,Z),Aux),                  %Verifica que el indice encontrado no esté en los auxiliares.Garantiza que se encuentren todos los sucesores
+    sucesores((X,Costo),Sucs,[(S1,Z)|Aux]).          %Llamada recursiva.
+
+sucesores(_,[],_):-!.                                %Caso base de la llamada recursiva.
+
+% Método para agregar los nodos sucesores del indice actual a la
+% frontera.
+
+agregarFrontera(_,[],Res,Res).                       %Caso en donde se termina de actualizar la frontera o el nodo actual no tiene sucesores.
+
+% Caso en donde el nodo sucesor ya se visitó y no se agrega a la
+% frontera para evitar ciclos.
+
+agregarFrontera(Visitados,[(A,_)|Sucs],Frontera,Res):-  %agregarFrontera(ListaVisitados,[(nodoSucesor,_)|RestoSucesores],Frontera,FronteraActualizada).
+    member(A,Visitados),                                %Verifica si el nodo actual ya se visitó.
+    agregarFrontera(Visitados,Sucs,Frontera,Res).       %Llamada recursiva con el nuevo sucesor.
+
+% Caso donde el nodo sucesor no esta en visitados, pero si en la
+% frontera. Su costo es mayor que el costo almacenado en la frontera.
+% Por tal motivo, no lo agrega.
+
+agregarFrontera(Visitados,[(A,B)|Sucs],Frontera,Res):-  %agregarFrontera(ListaVisitados,[(nodoSucesor,Costo)|RestoSucesores],Frontera,FronteraActualizada).
+    \+member(A,Visitados),                              %Verifica si el nodo actual ya se visitó.
+    member((A,_),Frontera),                             %Verifica si el nodo actual ya está en la frontera.
+    buscarFrontera(A,Frontera,Costo),                   %Obtiene el costo del nodo almacenado en la frontera.
+    B  >= Costo,                                        %El costo actual es mayor al costo almacenado.
+    agregarFrontera(Visitados,Sucs,Frontera,Res).       %Llamada recursiva.
+
+% Caso donde el nodo sucesor no esta en visitados, pero si en la
+% frontera. Su costo es menor que el costo almacenado en la frontera.
+% Por tal motivo, se actualiza el costo y se reordena la frontera.
+
+agregarFrontera(Visitados,[(A,B)|Sucs],Frontera,Res):-  %agregarFrontera(ListaVisitados,[(nodoSucesor,Costo)|RestoSucesores],Frontera,FronteraActualizada).
+    \+member(A,Visitados),                              %Verifica si el nodo actual ya se visitó.
+    member((A,_),Frontera),                             %Verifica si el nodo actual ya está en la frontera.
+    buscarFrontera(A,Frontera,Costo),                   %Obtiene el costo del nodo almacenado en la frontera.
+    Costo  > B,                                         %El costo actual es menor al costo almacenado.
+    delete(Frontera,(A,Costo),NFrontera),               %Elimina el nodo de la frontera.
+    ordenaFrontera((A,B),NFrontera,[],Afrontera),       %Agrega el nodo con el costo actualizado y reordena la frontera.
+    agregarFrontera(Visitados,Sucs,Afrontera,Res).      %Llamada recursiva.
+
+% Caso donde el nodo sucesor no esta en los visitados ni en la
+% frontera.Por ende, se actualiza la frontera con este nuevo nodo.
+
+agregarFrontera(Visitados,[(A,B)|Sucs],Frontera,Res):- %agregarFrontera(ListaVisitados,[(nodoSucesor,Costo)|RestoSucesores],Frontera,FronteraActualizada).
+     \+member(A,Visitados),                            %Verifica si el nodo actual ya se visitó.
+     \+member((A,_),Frontera),                         %Verifica si el nodo actual ya está en la frontera.
+     ordenaFrontera((A,B),Frontera,[],Nfrontera),      %Agrega el nodo actual "A" a la frontera
+     agregarFrontera(Visitados,Sucs,Nfrontera,Res).    %Llamada recursiva.
+
+% Método para ordenar la frontera dependiendo del costo del nodo actual;
+% ordena de menor a mayor.
+
+%Este caso contempla agregar el primer nodo a la frontera vacia.
+
+ordenaFrontera((A,B),[],[],[(A,B)]).  %ordenaFrontera((IndiceActual,Costo),Frontera,Auxiliar,NuevaFrontera).
+
+
+ordenaFrontera((A,B),[],[(X,Y)|Cola],NFrontera):-
+     reverse([(A,B),(X,Y)|Cola],NFrontera).
+
+% Este caso contempla cuando se agrega el segundo nodo a la frontera y
+% el costo del nodo actual es más grande que el costo del nodo
+% almacenado.
+
+ordenaFrontera((A,B),[(X,Y)|[]],[],[(X,Y),(A,B)|[]]):- %ordenaFrontera((nodoActual,Costo),[(IndicePrimerElemento,CostoPrimerElemento|[]],Auxiliar,Resultado)
+     B  > Y.
+
+% Caso donde el nodo actual es más grande al costo del primer elemento
+% de la frontera. En este caso, el primer elemento de la frontera se
+% almacena en auxiliar y se manda el resto de la frontera.
+
+ordenaFrontera((A,B),[(X,Y)|Cola],Aux,NFrontera):-
+     B > Y,
+     ordenaFrontera((A,B),Cola,[(X,Y)|Aux],NFrontera).
+
+% Caso que contempla que el costo del primer nodo de la frontera es más
+% grande que el costo del nodo actual. Dado que la lista auxiliar esta
+% vacía, el nodo actual se almacena al inicio de la frontera.
+
+ordenaFrontera((A,B),[(X,Y)|ColaF],[],[(A,B),(X,Y)|ColaF]):-
+     Y >= B.
+
+% Caso que contempla que el costo del siguiente nodo de la frontera es
+% más grande que el costo del nodo actual. La lista auxiliar contiene
+% los nodos de la frontera que tienen un costo menor que el nodo actual.
+% Al final, se agrega a la frontera el nodo actual en la posicion
+% correcta y se reinsertan los nodos de la lista auxiliar a la frontera.
+
+ordenaFrontera((A,B),[(X,Y)|ColaF],Aux,NFrontera):-
+    Y >=  B,
+    agregarAux([(A,B),(X,Y)|ColaF],Aux,NFrontera).
+
+%Método para vaciar la lista auxiliar a la frontera.
+
+agregarAux(Cola,[(X,Y)|Aux],NFrontera):-
+    agregarAux([(X,Y)|Cola],Aux,NFrontera).
+
+agregarAux(Cola,[],Cola).
+
+%Método para buscar en la frontera el costo acumulado de un nodo.
+
+%Caso base.
+
+buscarFrontera(A,[(A,Costo)|_],Costo).
+
+buscarFrontera(A,[(X,_)|Cola],Costo):-  %buscarFrontera(IndiceNodo,Frontera, CostoAcumulado).
+    A =\= X,
+    buscarFrontera(A,Cola,Costo).
+
+
+%Método para imprimir frontera
+
+%Caso base.
+
+imprimeRes([]).
+
+imprimeRes([A|Cola]):-
+     indice_ciudad(A,X),
+     write(X),
+     write("  "),
+     imprimeRes(Cola).
+
+
+% Método que permite filtrar y obtener el resultado final de la lista de
+% Resultado.
+
+actualizaCamino(Origen,C2,[A|Cola],Costotal,Res):-                 %actualizaCamino(Origen,Destino,[PrimerNodoResultado|Nodos],CostoTotal,ListaFinal).
+    actualizaCamino([A|Cola],C2,Origen,C2,[A|Cola],Costotal,[],0,Res,0).  %ActualizaCamino(Resultado,,Origen,Destino,Resultado,CostoTotal,Auxiliar,CostoAcum                                                                           ulado,ResultadoFinal,Bandera).El primer 0 corresponde al costo acumulado.                                                                                   Este, comparandolo con el costo total obtenido en el método de busqueda, nos                                                                                permitira obtener la solución correcta de entre las soluciones propuestas.                                                                                  El segundo 0 actua como una bandera que se activa si se encontró una posible                                                                                respuesta.
+
+% Caso en el que coincide el costo total con el costo Acumulado. Por tal
+% motivo, la solucion encontrada es la solución final y correcta.
+
+actualizaCamino(_,_,_,_,[],CosT,Aux,CosT,Aux,1).
+
+% Caso en el que no coincide el costo total con el costo Acumulado.Dado
+% que no coinciden, se actualiza la lista de resultados y se llama
+% nuevamente al método actualizaCamino para que realice una nueva
+% busqueda.
+
+actualizaCamino([_|LisRes],Des,Ori,_,[],CosT,_,CosAc,Res,1):-
+    CosT =\= CosAc,
+    actualizaCamino(LisRes,Des,Ori,Des,LisRes,CosT,[],0,Res,0).  %actualizaCamino([_|Resultado],Destino,Origen,Resultado,CostoTotal,Auxiliar,Costo                                                                            Acumulado,ResultadoFinal,Bandera).
+
+% Caso donde el nodo actual es el nodo destino. Asimismo, el nodo
+% antecesor del nodo destino está junto a el. Dado que se trata del
+% destino, únicamente se observa la conexión con el antecesor.
+
+actualizaCamino(R,D,Origen,C2,[A|Cola],CosTot,[],CosAc,Res,0):- %La lista de auxiliares está vacia porque es la primer llamada.
+     grafo(A,C2,Cos1),                                          %Encuentra el antecesor de destino "C2"
+     CosV is Cos1+CosAc,                     %Se obtiene el nuevo costo acumulado al sumar la distancia entre destino y antecesor más CostoAcumulado.
+     esDestino(A,Origen,Ban),                                   %Se verifica si el nodo encontrado es igual al destino.
+     actualizaCamino(R,D,Origen,A,Cola,CosTot,[C2],CosV,Res,Ban). %Llamada recursiva.
+
+%Caso donde el nodo actual es el nodo destino. Asimismo,
+%el nodo antecesor del nodo destino no está junto a el.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosTot,[],CosAc,Res,0):-
+     not(grafo(A,C2,_)),
+     actualizaCamino(R,D,Or,C2,Cola,CosTot,[],CosAc,Res,0).
+
+% Caso donde el nodo actual no es el nodo destino. Se busca el nodo
+% antecesor del nodo actual.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosT,[X|Aux],CosAc,Res,0):-
+     grafo(A,C2,Cos1),                                          %Se encuentra el nodo antecesor del nodo actual.
+     grafo(C2,X,_),                                             %Se corrobora que el nodo actual esté conectado con el nodo anterior.
+     CosV is CosAc + Cos1,                     %Se obtiene el nuevo costo acumulado al sumar la distancia entre destino y antecesor más CostoAcumulado.
+     esDestino(A,Or,Ban),                                       %Se verifica si el nodo encontrado es igual al destino.
+     actualizaCamino(R,D,Or,A,Cola,CosT,[C2,X|Aux],CosV,Res,Ban).
+
+% Caso en donde no se encuentra ninguna conexión entre el nodo actual y
+% el siguiente nodo de la lista de resultado. Por ende, el nodo de la
+% lista de resultado es descartado.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosT,[X|Aux],CosAc,Res,0):-
+     not(grafo(A,C2,_)),
+     not(grafo(C2,X,_)),
+     actualizaCamino(R,D,Or,C2,Cola,CosT,[X|Aux],CosAc,Res,0).
+
+% Caso donde no se encontró una conexión entre el nodo actual y el nodo
+% anterior.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosT,[X|Aux],CosAc,Res,0):-
+     grafo(A,C2,_),
+     not(grafo(C2,X,_)),
+     actualizaCamino(R,D,Or,C2,Cola,CosT,[X|Aux],CosAc,Res,0).
+
+%Caso donde no se encontó conexión entre el nodo actual y
+% el siguiente nodo de la lista de resultado.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosT,[X|Aux],CosAc,Res,0):-
+     not(grafo(A,C2,_)),
+     grafo(C2,X,_),
+     actualizaCamino(R,D,Or,C2,Cola,CosT,[X|Aux],CosAc,Res,0).
