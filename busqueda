@@ -1,0 +1,26 @@
+
+busqueda(Origen,(C1,Costo),C2,Frontera,Visitados,Resultado,0):-   %busqueda(Origen,(Origen,CostoAcumulado),Destino,Frontera,Visitados,Resultado,Bandera).
+    agregarIndice(C1, Visitados, VisitadosN),                     %Se agrega el nodo actual a la lista de visitados.
+    sucesores((C1,Costo),Sus),                                    %Encuentra los sucesores del nodo actual.
+    agregarFrontera(VisitadosN,Sus,Frontera,[(A,B)|FronteraN]),   %Agrega los sucesores del nodo actual a la frontera.
+    esDestino(A,C2,Res),                                          %Verifica si el nodo actual es el destino.
+    agregarIndice(C1,Resultado,Nres),                             %Se agrega el nodo actual a la lista de Resultado.
+    busqueda(Origen,(A,B),C2,FronteraN,VisitadosN,Nres,Res).      %Llamada recursiva del método hasta que encuentre una solución o no hay más frontera.
+
+% Caso donde la busqueda encuentra una solución. Imprime la ruta más
+% corta y la distancia total en Kilometros.
+
+busqueda(Origen,(_,B),C2,_,_,Resultado,1):-                       %busqueda(Origen,(_,CostoAcumulado),Destino,_,_,Resultado,Bandera).
+     actualizaCamino(Origen,C2,Resultado,B,CaminoCorrecto),       %Método para filtrar el resultado correcto de la lista de resultados.
+     write("La mejor ruta es la siguiente: "),nl,
+     indice_ciudad(Origen,X),
+     write(X),write("  "),
+     imprimeRes(CaminoCorrecto),nl,
+     write("La distancia en kilometros es: "),
+     write(B).
+
+% Caso donde la busqueda no encuentra una solución. Imprime el siguiente
+% mensaje: "No hay respuesta".
+
+busqueda(_,[],_,[],[],[],0):-
+    write("No hay respuesta").
