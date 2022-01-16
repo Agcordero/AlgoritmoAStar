@@ -1,0 +1,41 @@
+agregarFrontera(_,[],Res,Res).                       %Caso en donde se termina de actualizar la frontera o el nodo actual no tiene sucesores.
+
+% Caso en donde el nodo sucesor ya se visitó y no se agrega a la
+% frontera para evitar ciclos.
+
+agregarFrontera(Visitados,[(A,_)|Sucs],Frontera,Res):-  %agregarFrontera(ListaVisitados,[(nodoSucesor,_)|RestoSucesores],Frontera,FronteraActualizada).
+    member(A,Visitados),                                %Verifica si el nodo actual ya se visitó.
+    agregarFrontera(Visitados,Sucs,Frontera,Res).       %Llamada recursiva con el nuevo sucesor.
+
+% Caso donde el nodo sucesor no esta en visitados, pero si en la
+% frontera. Su costo es mayor que el costo almacenado en la frontera.
+% Por tal motivo, no lo agrega.
+
+agregarFrontera(Visitados,[(A,B)|Sucs],Frontera,Res):-  %agregarFrontera(ListaVisitados,[(nodoSucesor,Costo)|RestoSucesores],Frontera,FronteraActualizada).
+    \+member(A,Visitados),                              %Verifica si el nodo actual ya se visitó.
+    member((A,_),Frontera),                             %Verifica si el nodo actual ya está en la frontera.
+    buscarFrontera(A,Frontera,Costo),                   %Obtiene el costo del nodo almacenado en la frontera.
+    B  >= Costo,                                        %El costo actual es mayor al costo almacenado.
+    agregarFrontera(Visitados,Sucs,Frontera,Res).       %Llamada recursiva.
+
+% Caso donde el nodo sucesor no esta en visitados, pero si en la
+% frontera. Su costo es menor que el costo almacenado en la frontera.
+% Por tal motivo, se actualiza el costo y se reordena la frontera.
+
+agregarFrontera(Visitados,[(A,B)|Sucs],Frontera,Res):-  %agregarFrontera(ListaVisitados,[(nodoSucesor,Costo)|RestoSucesores],Frontera,FronteraActualizada).
+    \+member(A,Visitados),                              %Verifica si el nodo actual ya se visitó.
+    member((A,_),Frontera),                             %Verifica si el nodo actual ya está en la frontera.
+    buscarFrontera(A,Frontera,Costo),                   %Obtiene el costo del nodo almacenado en la frontera.
+    Costo  > B,                                         %El costo actual es menor al costo almacenado.
+    delete(Frontera,(A,Costo),NFrontera),               %Elimina el nodo de la frontera.
+    ordenaFrontera((A,B),NFrontera,[],Afrontera),       %Agrega el nodo con el costo actualizado y reordena la frontera.
+    agregarFrontera(Visitados,Sucs,Afrontera,Res).      %Llamada recursiva.
+
+% Caso donde el nodo sucesor no esta en los visitados ni en la
+% frontera.Por ende, se actualiza la frontera con este nuevo nodo.
+
+agregarFrontera(Visitados,[(A,B)|Sucs],Frontera,Res):- %agregarFrontera(ListaVisitados,[(nodoSucesor,Costo)|RestoSucesores],Frontera,FronteraActualizada).
+     \+member(A,Visitados),                            %Verifica si el nodo actual ya se visitó.
+     \+member((A,_),Frontera),                         %Verifica si el nodo actual ya está en la frontera.
+     ordenaFrontera((A,B),Frontera,[],Nfrontera),      %Agrega el nodo actual "A" a la frontera
+     agregarFrontera(Visitados,Sucs,Nfrontera,Res).    %Llamada recursiva.
