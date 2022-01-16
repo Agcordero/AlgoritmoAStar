@@ -1,0 +1,36 @@
+%Caso que considera que el origen está mal escrito.
+
+encontrarCamino(Origen,Destino):-
+     not(indice_ciudad(_,Origen)),
+     indice_ciudad(_,Destino),
+     write("El nombre del Origen está mal escrito").
+
+%Caso que considera que el destino está mal escrito.
+
+encontrarCamino(Origen,Destino):-
+     indice_ciudad(_,Origen),
+     not(indice_ciudad(_,Destino)),
+     write("El nombre del Destino está mal escrito").
+
+%Caso que considera que el destino y el origen están mal escritos.
+
+encontrarCamino(Origen,Destino):-
+     not(indice_ciudad(_,Origen)),
+     not(indice_ciudad(_,Destino)),
+     write("El nombre del Origen y del destino están mal escritos").
+
+% Método que considera el caso donde la ciudad origen es también el
+% destino.
+
+encontrarCamino(Origen,Origen):-
+     write("el destino es igual al origen").
+
+% Método que se ejecuta desde la consola para buscar el camino más corto
+% para llegar desde la ciudad Origen a la ciudad Destino.
+
+encontrarCamino(Origen,Destino):-                                 %El método recibe el nombre de la ciudad origen y el nombre de la ciudad Destino.
+     indice_ciudad(C1,Origen),                                    %Se obtiene el indice asociado a la ciudad origen.
+     indice_ciudad(C2,Destino),                                   %Se obtiene el indice asociado a la ciudad destino.
+     busqueda(C1,(C1,0),C2,[],[],[],0).                           %Al inicio, el costo acumulado es 0, las listas de Frontera, visitados
+                                                                  %y frontera se encuentran vacias y la bandera sirve para indicar si la
+                                                                  % busqueda ha terminado.
