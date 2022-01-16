@@ -1,0 +1,42 @@
+% Método para ordenar la frontera dependiendo del costo del nodo actual;
+% ordena de menor a mayor.
+
+%Este caso contempla agregar el primer nodo a la frontera vacia.
+
+ordenaFrontera((A,B),[],[],[(A,B)]).  %ordenaFrontera((IndiceActual,Costo),Frontera,Auxiliar,NuevaFrontera).
+
+
+ordenaFrontera((A,B),[],[(X,Y)|Cola],NFrontera):-
+     reverse([(A,B),(X,Y)|Cola],NFrontera).
+
+% Este caso contempla cuando se agrega el segundo nodo a la frontera y
+% el costo del nodo actual es más grande que el costo del nodo
+% almacenado.
+
+ordenaFrontera((A,B),[(X,Y)|[]],[],[(X,Y),(A,B)|[]]):- %ordenaFrontera((nodoActual,Costo),[(IndicePrimerElemento,CostoPrimerElemento|[]],Auxiliar,Resultado)
+     B  > Y.
+
+% Caso donde el nodo actual es más grande al costo del primer elemento
+% de la frontera. En este caso, el primer elemento de la frontera se
+% almacena en auxiliar y se manda el resto de la frontera.
+
+ordenaFrontera((A,B),[(X,Y)|Cola],Aux,NFrontera):-
+     B > Y,
+     ordenaFrontera((A,B),Cola,[(X,Y)|Aux],NFrontera).
+
+% Caso que contempla que el costo del primer nodo de la frontera es más
+% grande que el costo del nodo actual. Dado que la lista auxiliar esta
+% vacía, el nodo actual se almacena al inicio de la frontera.
+
+ordenaFrontera((A,B),[(X,Y)|ColaF],[],[(A,B),(X,Y)|ColaF]):-
+     Y >= B.
+
+% Caso que contempla que el costo del siguiente nodo de la frontera es
+% más grande que el costo del nodo actual. La lista auxiliar contiene
+% los nodos de la frontera que tienen un costo menor que el nodo actual.
+% Al final, se agrega a la frontera el nodo actual en la posicion
+% correcta y se reinsertan los nodos de la lista auxiliar a la frontera.
+
+ordenaFrontera((A,B),[(X,Y)|ColaF],Aux,NFrontera):-
+    Y >=  B,
+    agregarAux([(A,B),(X,Y)|ColaF],Aux,NFrontera).
