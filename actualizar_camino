@@ -1,0 +1,71 @@
+% Método que permite filtrar y obtener el resultado final de la lista de
+% Resultado.
+
+actualizaCamino(Origen,C2,[A|Cola],Costotal,Res):-                 %actualizaCamino(Origen,Destino,[PrimerNodoResultado|Nodos],CostoTotal,ListaFinal).
+    actualizaCamino([A|Cola],C2,Origen,C2,[A|Cola],Costotal,[],0,Res,0).  %ActualizaCamino(Resultado,,Origen,Destino,Resultado,CostoTotal,Auxiliar,CostoAcum                                                                           ulado,ResultadoFinal,Bandera).El primer 0 corresponde al costo acumulado.                                                                                   Este, comparandolo con el costo total obtenido en el método de busqueda, nos                                                                                permitira obtener la solución correcta de entre las soluciones propuestas.                                                                                  El segundo 0 actua como una bandera que se activa si se encontró una posible                                                                                respuesta.
+
+% Caso en el que coincide el costo total con el costo Acumulado. Por tal
+% motivo, la solucion encontrada es la solución final y correcta.
+
+actualizaCamino(_,_,_,_,[],CosT,Aux,CosT,Aux,1).
+
+% Caso en el que no coincide el costo total con el costo Acumulado.Dado
+% que no coinciden, se actualiza la lista de resultados y se llama
+% nuevamente al método actualizaCamino para que realice una nueva
+% busqueda.
+
+actualizaCamino([_|LisRes],Des,Ori,_,[],CosT,_,CosAc,Res,1):-
+    CosT =\= CosAc,
+    actualizaCamino(LisRes,Des,Ori,Des,LisRes,CosT,[],0,Res,0).  %actualizaCamino([_|Resultado],Destino,Origen,Resultado,CostoTotal,Auxiliar,Costo                                                                            Acumulado,ResultadoFinal,Bandera).
+
+% Caso donde el nodo actual es el nodo destino. Asimismo, el nodo
+% antecesor del nodo destino está junto a el. Dado que se trata del
+% destino, únicamente se observa la conexión con el antecesor.
+
+actualizaCamino(R,D,Origen,C2,[A|Cola],CosTot,[],CosAc,Res,0):- %La lista de auxiliares está vacia porque es la primer llamada.
+     grafo(A,C2,Cos1),                                          %Encuentra el antecesor de destino "C2"
+     CosV is Cos1+CosAc,                     %Se obtiene el nuevo costo acumulado al sumar la distancia entre destino y antecesor más CostoAcumulado.
+     esDestino(A,Origen,Ban),                                   %Se verifica si el nodo encontrado es igual al destino.
+     actualizaCamino(R,D,Origen,A,Cola,CosTot,[C2],CosV,Res,Ban). %Llamada recursiva.
+
+%Caso donde el nodo actual es el nodo destino. Asimismo,
+%el nodo antecesor del nodo destino no está junto a el.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosTot,[],CosAc,Res,0):-
+     not(grafo(A,C2,_)),
+     actualizaCamino(R,D,Or,C2,Cola,CosTot,[],CosAc,Res,0).
+
+% Caso donde el nodo actual no es el nodo destino. Se busca el nodo
+% antecesor del nodo actual.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosT,[X|Aux],CosAc,Res,0):-
+     grafo(A,C2,Cos1),                                          %Se encuentra el nodo antecesor del nodo actual.
+     grafo(C2,X,_),                                             %Se corrobora que el nodo actual esté conectado con el nodo anterior.
+     CosV is CosAc + Cos1,                     %Se obtiene el nuevo costo acumulado al sumar la distancia entre destino y antecesor más CostoAcumulado.
+     esDestino(A,Or,Ban),                                       %Se verifica si el nodo encontrado es igual al destino.
+     actualizaCamino(R,D,Or,A,Cola,CosT,[C2,X|Aux],CosV,Res,Ban).
+
+% Caso en donde no se encuentra ninguna conexión entre el nodo actual y
+% el siguiente nodo de la lista de resultado. Por ende, el nodo de la
+% lista de resultado es descartado.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosT,[X|Aux],CosAc,Res,0):-
+     not(grafo(A,C2,_)),
+     not(grafo(C2,X,_)),
+     actualizaCamino(R,D,Or,C2,Cola,CosT,[X|Aux],CosAc,Res,0).
+
+% Caso donde no se encontró una conexión entre el nodo actual y el nodo
+% anterior.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosT,[X|Aux],CosAc,Res,0):-
+     grafo(A,C2,_),
+     not(grafo(C2,X,_)),
+     actualizaCamino(R,D,Or,C2,Cola,CosT,[X|Aux],CosAc,Res,0).
+
+%Caso donde no se encontó conexión entre el nodo actual y
+% el siguiente nodo de la lista de resultado.
+
+actualizaCamino(R,D,Or,C2,[A|Cola],CosT,[X|Aux],CosAc,Res,0):-
+     not(grafo(A,C2,_)),
+     grafo(C2,X,_),
+     actualizaCamino(R,D,Or,C2,Cola,CosT,[X|Aux],CosAc,Res,0).
